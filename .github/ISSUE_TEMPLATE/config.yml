@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 FAQ
+    url: https://github.com/GeekASMR/WDM2VST-Ultra/blob/main/docs/FAQ.md
+    about: 在开 issue 之前请先看一下，常见问题都有解答
+  - name: 💬 已关闭 issue 中的解答
+    url: https://github.com/GeekASMR/WDM2VST-Ultra/issues?q=is%3Aissue+is%3Aclosed
+    about: 别人遇到过的问题
+  - name: 🌟 项目主页 / 捐赠
+    url: https://ultra.asmrtop.cn/
+    about: 了解项目、赞助 EV 证书让微软签名落地
