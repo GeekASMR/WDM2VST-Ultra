@@ -1,0 +1,47 @@
+name: ❓ 使用问题 / 求助
+description: 不确定是 bug，先咨询一下
+title: "Q: <一句话问题>"
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        如果你的问题已经在 [FAQ](https://github.com/GeekASMR/WDM2VST-Ultra/blob/main/docs/FAQ.md) 里，请先看一下。
+
+        常见且已记录的问题：
+
+        - 玩游戏被反作弊拦截 → [#1](https://github.com/GeekASMR/WDM2VST-Ultra/issues/1)
+        - 蓝牙耳机麦只能单声道 → 蓝牙协议本身限制，参考 [#2](https://github.com/GeekASMR/WDM2VST-Ultra/issues/2) 的回复
+        - DAW 扫不到插件 → [#3](https://github.com/GeekASMR/WDM2VST-Ultra/issues/3) 的排查步骤
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: 插件版本
+      placeholder: v1.0.6
+    validations:
+      required: false
+
+  - type: input
+    id: daw
+    attributes:
+      label: DAW 与版本
+      placeholder: Studio One 6.5.2
+    validations:
+      required: false
+
+  - type: textarea
+    id: question
+    attributes:
+      label: 问题
+      description: 详细描述你的疑问 / 卡点
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 背景 / 已尝试的事情
+      description: 你想做什么？已经试过哪些做法？
+    validations:
+      required: false

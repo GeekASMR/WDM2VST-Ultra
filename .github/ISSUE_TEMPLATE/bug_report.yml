@@ -1,0 +1,134 @@
+name: 🐛 Bug 报告
+description: 报告一个可以稳定复现的问题
+title: "BUG: <一句话描述>"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你花时间提交反馈 🙏
+
+        在开始之前，请先确认：
+
+        - 已经查看过 [FAQ](https://github.com/GeekASMR/WDM2VST-Ultra/blob/main/docs/FAQ.md)
+        - 已经在 [现有 issues](https://github.com/GeekASMR/WDM2VST-Ultra/issues?q=is%3Aissue) 里搜过相同问题
+
+        如果是「DAW 扫不到插件」，请先按 [#3](https://github.com/GeekASMR/WDM2VST-Ultra/issues/3) 的回复检查 5 个 .vst3 是否齐全、清理旧版本残留、让 DAW 重新扫描。
+
+        如果是「玩游戏被反作弊拦截」，那是反作弊对非微软签名内核驱动的统一行为，不是 bug。详见 [#1](https://github.com/GeekASMR/WDM2VST-Ultra/issues/1) 的临时方案与长期方案。
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: 插件版本
+      description: 在插件 UI 右上角能看到，例如 v1.0.6
+      placeholder: v1.0.6
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: 操作系统
+      description: Windows 11 23H2 / Windows 10 22H2 等。可以在「设置 → 系统 → 关于」看
+      placeholder: Windows 11 23H2
+    validations:
+      required: true
+
+  - type: input
+    id: daw
+    attributes:
+      label: DAW 与版本
+      description: Studio One 6.5 / LUNA 1.7.5 / Cubase 13 / Reaper 7.x 等
+      placeholder: Studio One 6.5.2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: plugin-which
+    attributes:
+      label: 哪个插件出问题
+      description: 五个 VST3 中受影响的（多选）
+      multiple: true
+      options:
+        - WDM2VST Ultra (W2V，从 WDM 端点接收音频)
+        - VST2WDM Ultra (V2W，发送音频到 WDM 端点)
+        - INST WDM2VST Ultra (Instrument 模式)
+        - Send Ultra (P2P 发送)
+        - Receive Ultra (P2P 接收)
+        - 不确定 / 多个都有
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 现象
+      description: 详细描述一下你观察到了什么。如果有截图或视频，可以直接拖到这个框里。
+      placeholder: |
+        例如：选中麦克风设备点击「锁定」之后，关闭再打开插件窗口，输入设备下拉框变成空白。
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      description: 一步一步说明怎么触发这个问题，最好是从头到尾的最简路径
+      placeholder: |
+        1. 在 DAW 轨道上加载 WDM2VST Ultra
+        2. 在插件中选择 "XXX" 设备
+        3. 点击锁定按钮
+        4. 关闭插件窗口
+        5. 重新打开
+        6. 期望：下拉框显示 XXX；实际：下拉框为空
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+      description: 你认为正确的行为应该是什么？
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 诊断输出
+      description: |
+        如果有 Windows 事件日志、DAW 的扫描日志、DebugView 抓取的内核驱动消息，贴在这里。
+        Windows 事件日志：「事件查看器 → Windows 日志 → 系统」搜 `WDM2VSTUltra`
+      render: shell
+    validations:
+      required: false
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 严重程度（自评）
+      description: 让我们了解优先级
+      options:
+        - 🔥 阻塞 - 完全不能用
+        - ⚠️ 严重 - 主要功能受影响，但有 workaround
+        - 🐞 一般 - 偶发或小范围影响
+        - 💄 轻微 - UI / 体验问题
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: tried
+    attributes:
+      label: 已尝试的排查
+      description: 勾选你已经做过的事情（不强制）
+      options:
+        - label: 重启 DAW
+        - label: 重启 Windows
+        - label: 重新安装最新版插件（覆盖安装即可）
+        - label: 换一个 DAW 测试
+        - label: 临时禁用驱动服务（`net stop WDM2VSTUltra`）
