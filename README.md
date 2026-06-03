@@ -1,9 +1,9 @@
 # WDM2VST Ultra
 
-[![Latest release](https://img.shields.io/github/v/release/GeekASMR/WDM2VST-Ultra?style=flat-square&color=E91E63)](https://github.com/GeekASMR/WDM2VST-Ultra/releases/latest)
-[![Total downloads](https://img.shields.io/github/downloads/GeekASMR/WDM2VST-Ultra/total?style=flat-square&label=total%20downloads&color=0E8A16)](https://github.com/GeekASMR/WDM2VST-Ultra/releases)
-[![GitHub stars](https://img.shields.io/github/stars/GeekASMR/WDM2VST-Ultra?style=flat-square&color=FFD700)](https://github.com/GeekASMR/WDM2VST-Ultra/stargazers)
-[![Open issues](https://img.shields.io/github/issues/GeekASMR/WDM2VST-Ultra?style=flat-square&color=orange)](https://github.com/GeekASMR/WDM2VST-Ultra/issues)
+[![Latest release](https://img.shields.io/github/v/release/GeekAudio/WDM2VST-Ultra?style=flat-square&color=E91E63)](https://github.com/GeekAudio/WDM2VST-Ultra/releases/latest)
+[![Total downloads](https://img.shields.io/github/downloads/GeekAudio/WDM2VST-Ultra/total?style=flat-square&label=total%20downloads&color=0E8A16)](https://github.com/GeekAudio/WDM2VST-Ultra/releases)
+[![GitHub stars](https://img.shields.io/github/stars/GeekAudio/WDM2VST-Ultra?style=flat-square&color=FFD700)](https://github.com/GeekAudio/WDM2VST-Ultra/stargazers)
+[![Open issues](https://img.shields.io/github/issues/GeekAudio/WDM2VST-Ultra?style=flat-square&color=orange)](https://github.com/GeekAudio/WDM2VST-Ultra/issues)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue?style=flat-square)](#system-requirements)
 
 [🇨🇳 中文版](#-中文说明-chinese) | [🇬🇧 English Version](#-english-version) | [💚 支持开发 / Support Development](#-支持开发--support-development)
@@ -22,7 +22,7 @@ WDM2VST Ultra is a Windows audio bridging tool that provides low-latency audio r
 - **INST WDM2VST Ultra** — Instrument 模式版本（用于乐器轨道宿主）
 - **Send Ultra 发送端** — 跨插件音频发送器
 - **Receive Ultra 接收端** — 跨插件音频接收器
-- **内核驱动** — 8 通道播放 + 8 通道录制，通过共享内存实现低延迟传输
+- **内核驱动** — 安装时可选 4 / 8 / 16 组虚拟端点（每组一对立体声 PLAY + REC），最多 16 入 16 出，通过共享内存实现低延迟传输
 
 ### 系统要求
 - Windows 10/11 x64（版本 1809 及以上）
@@ -30,7 +30,7 @@ WDM2VST Ultra is a Windows audio bridging tool that provides low-latency audio r
 - 管理员权限（用于驱动安装）
 
 ### 安装
-1. 下载 [`WDM2VST_Ultra_v*_Setup.exe`](https://github.com/GeekASMR/WDM2VST-Ultra/releases/latest)
+1. 下载 [`WDM2VST_Ultra_v*_Setup.exe`](https://github.com/GeekAudio/WDM2VST-Ultra/releases/latest)
 2. 以管理员身份运行安装程序
 3. 选择需要安装的组件
 4. 安装完成后**重启计算机**
@@ -67,7 +67,7 @@ WDM2VST Ultra is a Windows audio bridging tool that provides low-latency audio r
 
 - **游戏反作弊误报**：Easy Anti-Cheat / 腾讯 ACE / 网易易盾会保守拦截所有非微软签名的内核驱动，与本驱动是否影响游戏无关。临时方案：玩游戏前 `net stop WDM2VSTUltra` 停用驱动服务，玩完再 `net start WDM2VSTUltra` 启回。长期方案见下方 [支持开发](#-支持开发--support-development)。
 - **蓝牙耳机麦只有单声道**：A2DP/HFP 协议本身限制，所有软件取到的都是单声道，不是本插件 bug。
-- 更多见 [FAQ](docs/FAQ.md) 和 [已关闭 issues](https://github.com/GeekASMR/WDM2VST-Ultra/issues?q=is%3Aissue+is%3Aclosed)。
+- 更多见 [FAQ](docs/FAQ.md) 和 [已关闭 issues](https://github.com/GeekAudio/WDM2VST-Ultra/issues?q=is%3Aissue+is%3Aclosed)。
 
 ---
 
@@ -79,7 +79,7 @@ WDM2VST Ultra is a Windows audio bridging tool that provides low-latency audio r
 - **INST WDM2VST Ultra** — Instrument-mode variant (for instrument-track hosts)
 - **Send Ultra** — Inter-plugin audio sender
 - **Receive Ultra** — Inter-plugin audio receiver
-- **Kernel Driver** — 8 playback channels + 8 capture channels with low-latency shared memory transport
+- **Kernel Driver** — 4 / 8 / 16 endpoint groups selectable at install (each group is a stereo PLAY + REC pair), up to 16-in / 16-out, low-latency shared memory transport
 
 ### System Requirements
 - Windows 10/11 x64 (Version 1809 or higher)
@@ -87,7 +87,7 @@ WDM2VST Ultra is a Windows audio bridging tool that provides low-latency audio r
 - Administrator privileges (for driver installation)
 
 ### Installation
-1. Download [`WDM2VST_Ultra_v*_Setup.exe`](https://github.com/GeekASMR/WDM2VST-Ultra/releases/latest)
+1. Download [`WDM2VST_Ultra_v*_Setup.exe`](https://github.com/GeekAudio/WDM2VST-Ultra/releases/latest)
 2. Run the installer as Administrator
 3. Select the components to install
 4. **Restart your computer** after installation
@@ -124,7 +124,7 @@ After installing the driver, the following virtual audio endpoints will be avail
 
 - **Game anti-cheat false positives**: Easy Anti-Cheat / Tencent ACE / NetEase 易盾 conservatively flag any non-Microsoft-signed kernel driver, regardless of what it does. Workaround: `net stop WDM2VSTUltra` before gaming, `net start` after. See [support](#-支持开发--support-development) for the long-term WHQL fix.
 - **Bluetooth mic mono only**: A2DP/HFP protocol limitation — every recording app gets a mono stream from Bluetooth headsets. Not a plugin bug.
-- See [FAQ](docs/FAQ.md) and [closed issues](https://github.com/GeekASMR/WDM2VST-Ultra/issues?q=is%3Aissue+is%3Aclosed) for more.
+- See [FAQ](docs/FAQ.md) and [closed issues](https://github.com/GeekAudio/WDM2VST-Ultra/issues?q=is%3Aissue+is%3Aclosed) for more.
 
 ---
 
@@ -145,7 +145,7 @@ WDM2VST Ultra 当前使用合法的**第三方代码签名证书**——足以�
 
 ### 怎么支持
 
-> 🌟 **<https://ultra.asmrtop.cn/donate/>**
+> 🌟 **<https://www.geekaudio.cn/donate/>**
 
 页面支持 微信支付 / 支付宝，¥5 起，金额自定。也可以留下昵称和留言（会显示在感谢墙）。
 
@@ -166,7 +166,7 @@ Every donation goes explicitly toward WHQL costs — **fully transparent, progre
 
 ### How to support
 
-> 🌟 **<https://ultra.asmrtop.cn/donate/>**
+> 🌟 **<https://www.geekaudio.cn/donate/>**
 
 WeChat Pay / Alipay supported, ¥5 minimum, custom amount allowed. Optional nickname + message appears on the contributor wall.
 
@@ -176,9 +176,17 @@ No pressure — a GitHub ⭐ is just as appreciated.
 
 ## 版本历史 / Changelog
 
-完整发布记录见 [Releases 页面](https://github.com/GeekASMR/WDM2VST-Ultra/releases)。下面列出近期重点：
+完整发布记录见 [Releases 页面](https://github.com/GeekAudio/WDM2VST-Ultra/releases)。下面列出近期重点：
 
-Latest highlights — see the full [release page](https://github.com/GeekASMR/WDM2VST-Ultra/releases) for everything.
+Latest highlights — see the full [release page](https://github.com/GeekAudio/WDM2VST-Ultra/releases) for everything.
+
+### v1.0.9 — 可选 4/8/16 端点组 · 录制端改线路 · 蓝屏修复 · 品牌升级 GeekAudio
+- 安装时可选 **4 / 8 / 16 组**虚拟端点（最多 16 入 16 出），换组多数情况免重启
+- 录制端点在声音面板显示为**线路接口**（不再是麦克风），与播放端一致
+- 修复压力测试下偶发蓝屏 **0xD1**（流析构竞态：先取消定时器再释放）
+- 端点名零填充 `01/02..31/32`，修复声音面板 / DAW 下拉排序
+- 安装器：单实例（禁止多开）、禁用文字选择 / 复制、捐赠页「我已支付」即时查单
+- 品牌 **GeekASMR → GeekAudio**，官网 / 捐赠迁移至 www.geekaudio.cn
 
 ### v1.0.6 — Locked-device UI persistence fix
 - W2V: 锁定设备在关闭并重新打开插件窗口后正确显示，不再被清空
@@ -200,7 +208,7 @@ Latest highlights — see the full [release page](https://github.com/GeekASMR/WD
 
 ### v1.0.1 — Branding cleanup
 - 插件标题统一为 "Send Ultra 发送端" / "Receive Ultra 接收端"
-- 厂商名统一为 **GeekASMR**
+- 厂商名统一为 **GeekASMR**（v1.0.9 起升级为 GeekAudio）
 - 安装器中文翻译补全
 - VST3 文件夹自定义图标
 
@@ -222,10 +230,12 @@ This project uses or references the following excellent open-source projects:
 - **[Tauri](https://tauri.app/)** — Lightweight cross-platform installer shell
 
 ## 许可证 / License
-Free to use / 免费使用. Copyright &copy; 2026 GeekASMR.
+Free to use / 免费使用. Copyright &copy; 2026 GeekAudio.
 
 ## 相关链接 / Links
-- [GitHub Releases](https://github.com/GeekASMR/WDM2VST-Ultra/releases) — 下载安装器 / Download installers
-- [Issue tracker](https://github.com/GeekASMR/WDM2VST-Ultra/issues) — 报告 bug / 功能建议
+- [GitHub Releases](https://github.com/GeekAudio/WDM2VST-Ultra/releases) — 下载安装器 / Download installers
+- [Issue tracker](https://github.com/GeekAudio/WDM2VST-Ultra/issues) — 报告 bug / 功能建议
 - [FAQ](docs/FAQ.md) — 常见问题
-- 🌟 [支持开发 / Donate](https://ultra.asmrtop.cn/donate/)
+- 🌟 [支持开发 / Donate](https://www.geekaudio.cn/donate/)
+
+
