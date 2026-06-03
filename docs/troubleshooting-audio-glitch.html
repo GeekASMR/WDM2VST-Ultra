@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WDM2VST Ultra · 音频变调 / 卡顿排查指南</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --bg-soft: #191c22;
+    --card: #1c2029;
+    --border: #2a2f3a;
+    --text: #e6e8ec;
+    --dim: #9aa0ab;
+    --mute: #6b7280;
+    --accent: #00e5ff;
+    --warn: #f4b860;
+    --ok: #5ad15a;
+    --bad: #ff5d6c;
+    --mono: "Cascadia Code", "Consolas", "SFMono-Regular", monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    line-height: 1.75;
+    font-size: 15px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+  header {
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 18px;
+    margin-bottom: 28px;
+  }
+  h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: 0.3px; }
+  .sub { color: var(--dim); font-size: 14px; }
+  h2 {
+    font-size: 19px;
+    margin: 36px 0 12px;
+    padding-left: 12px;
+    border-left: 4px solid var(--accent);
+  }
+  h3 { font-size: 16px; margin: 22px 0 8px; color: var(--accent); }
+  p { margin: 10px 0; color: var(--text); }
+  .dim { color: var(--dim); }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin: 16px 0;
+  }
+  .callout {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-left: 4px solid;
+  }
+  .callout.info { background: rgba(0,229,255,0.07); border-color: var(--accent); }
+  .callout.warn { background: rgba(244,184,96,0.08); border-color: var(--warn); }
+  .callout.ok   { background: rgba(90,209,90,0.07); border-color: var(--ok); }
+  .callout .t { font-weight: 600; margin-bottom: 4px; }
+  code {
+    font-family: var(--mono);
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 13px;
+    color: #d7e0ea;
+  }
+  pre {
+    font-family: var(--mono);
+    background: #0a0c10;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 13px;
+    color: #cdd6e0;
+    line-height: 1.5;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .btn {
+    display: inline-block;
+    background: var(--accent);
+    color: #00222a;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    margin: 6px 8px 6px 0;
+    font-size: 14px;
+  }
+  .btn:hover { text-decoration: none; filter: brightness(1.1); }
+  .btn.sec { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  th { color: var(--accent); font-weight: 600; }
+  td.mono { font-family: var(--mono); font-size: 13px; }
+  ol li, ul li { margin: 6px 0; }
+  .step { counter-reset: none; }
+  .tag { display:inline-block; font-size:12px; padding:1px 8px; border-radius:10px; border:1px solid var(--border); color:var(--dim); }
+  .tag.ok { color: var(--ok); border-color: rgba(90,209,90,0.4); }
+  .tag.bad { color: var(--bad); border-color: rgba(255,93,108,0.4); }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--mute); font-size: 13px; }
+  .kbd { font-family: var(--mono); background: var(--bg-soft); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 1px 7px; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>音频变调 / 周期性卡顿 排查指南</h1>
+  <div class="sub">WDM2VST Ultra · 适用于"CPU 占用不高，但音频出现变调、忽快忽慢、周期性爆音"的情况</div>
+</header>
+
+<div class="callout info">
+  <div class="t">一句话结论</div>
+  绝大多数"变调"不是插件算错了，而是<strong>给音频缓冲区喂数据的节奏被系统里某个驱动打断了</strong>（最常见是网卡、Wi-Fi、显卡、USB 驱动在高负载时产生的 DPC/ISR 延迟）。缓冲区一旦见底，插件的时钟恢复（PLL）就会临时调慢/调快读取速度来补偿，听感上就是变调。本指南教你定位是哪个驱动、以及如何缓解。
+</div>
+
+<h2>一、先理解现象：为什么"CPU 很低却变调"</h2>
+<div class="card">
+  <p>音频是<strong>硬实时</strong>任务：每隔几毫秒就必须有一批新样本送到。WDM2VST Ultra 通过共享内存环形缓冲区在内核驱动和插件之间传音频。</p>
+  <ul>
+    <li>正常时：缓冲区里始终留有一定"余量"（目标延迟），即使偶尔抖动也不会见底。</li>
+    <li>异常时：系统里某个驱动在内核态长时间占用 CPU（一次 <code>DPC</code> 或 <code>ISR</code> 执行了几毫秒），把音频驱动的写入/读取节奏挤掉了。<strong>这段时间 CPU 总占用率可以很低</strong>（只是某一核在内核态被独占），但音频缓冲区已经饿了。</li>
+    <li>缓冲见底 → PLL 降速读取 / Hermite 重采样介入补偿 → <strong>音调变低或忽高忽低</strong>；更严重时直接静音淡出再重新缓冲（爆音/断续）。</li>
+  </ul>
+  <p class="dim">关键指标叫 <strong>DPC/ISR 延迟</strong>（Deferred Procedure Call / Interrupt Service Routine 执行时间）。它和 CPU 占用率是两回事——这就是"CPU 不高却卡"的原因。</p>
+</div>
+
+<h2>二、用 LatencyMon 定位元凶驱动 <span class="tag">推荐 · 免费</span></h2>
+<p>LatencyMon 是专门测"系统是否适合实时音频"的工具，会直接告诉你哪个内核驱动的 DPC/ISR 延迟过高。</p>
+
+<div class="card">
+  <h3>下载</h3>
+  <a class="btn" href="https://www.resplendence.com/download/LatencyMon.exe">直接下载 LatencyMon.exe（官方）</a>
+  <a class="btn sec" href="https://resplendence.com/latencymon">官方主页</a>
+  <p class="dim">开发商 Resplendence Software，完全免费。如官方下载慢，可在 <a href="https://www.majorgeeks.com/files/details/latencymon.html">MajorGeeks</a> 镜像下载。安装后<strong>以管理员身份运行</strong>。</p>
+</div>
+
+<div class="card step">
+  <h3>测试步骤</h3>
+  <ol>
+    <li>先把你平时<strong>会一起运行的软件全部打开</strong>（DAW、直播软件、浏览器、会议软件等）—— 要在"会触发问题的真实环境"下测。</li>
+    <li>打开 LatencyMon，点左上角绿色 <span class="kbd">▶ Start</span> 开始监测。</li>
+    <li>让它跑 <strong>至少 5–10 分钟</strong>，期间<strong>主动复现问题</strong>：比如做大量网络传输、切换网页、开关 Wi-Fi、运行你平时导致变调的操作。</li>
+    <li>复现到变调后，点 <span class="kbd">■ Stop</span>。</li>
+    <li>看结果（见下方"怎么读报告"）。</li>
+  </ol>
+</div>
+
+<div class="card">
+  <h3>怎么读报告</h3>
+  <p><strong>Main 标签页</strong>顶部会给一句结论。判定标准（官方）：</p>
+  <table>
+    <tr><th>DPC / ISR 最高执行时间</th><th>含义</th></tr>
+    <tr><td class="mono">&lt; 500 µs</td><td><span class="tag ok">很好</span> 系统适合实时音频</td></tr>
+    <tr><td class="mono">500 – 2000 µs</td><td>临界，偶发问题可能来自这里</td></tr>
+    <tr><td class="mono">&gt; 2000 µs</td><td><span class="tag bad">有问题</span> 几乎必然导致爆音/变调</td></tr>
+  </table>
+  <p>切到 <strong>Drivers 标签页</strong>，按 <code>DPC count</code> 或 <code>Highest execution (ms)</code> 排序，<strong>排在最前面的那个 .sys 就是元凶</strong>。常见嫌疑：</p>
+  <table>
+    <tr><th>驱动文件</th><th>对应硬件</th></tr>
+    <tr><td class="mono">ndis.sys / 网卡厂商.sys</td><td>网卡 / Wi-Fi（"大量网络 IO 变调"最常见）</td></tr>
+    <tr><td class="mono">nvlddmkm.sys / igdkmd64.sys</td><td>NVIDIA / Intel 显卡</td></tr>
+    <tr><td class="mono">Wdf01000.sys / USBPORT.sys</td><td>USB 控制器</td></tr>
+    <tr><td class="mono">storport.sys / iaStorAC.sys</td><td>磁盘 / 存储控制器</td></tr>
+    <tr><td class="mono">ACPI.sys / dxgkrnl.sys</td><td>电源管理 / 图形内核</td></tr>
+  </table>
+</div>
+
+<div class="callout warn">
+  <div class="t">如果元凶是网卡 / Wi-Fi（你这次的情况）</div>
+  "大量网络 IO 时变调"几乎可以确定是网卡驱动的 DPC 在高吞吐时变长。这是 Windows 实时调度下的常见现象，<strong>不是插件 bug</strong>，但下面的方法能显著缓解。
+</div>
+
+<h2>三、缓解方案（从简单到进阶）</h2>
+
+<h3>① 提高 WDM2VST Ultra 的延迟模式 <span class="tag ok">最快见效</span></h3>
+<div class="card">
+  <p>插件里有 <strong>Latency 模式</strong>（Safe / Fast / Extreme / Insane）。更高的延迟 = 更深的缓冲区 = 能吸收更大的 DPC 抖动而不见底。</p>
+  <p>如果你在用 Fast/Extreme/Insane 又遇到网络 IO 变调，<strong>切回 Safe</strong>。代价是延迟变高几毫秒，但能换来稳定。</p>
+  <p class="dim">原理：缓冲区越深，越能"扛过"网卡驱动那几毫秒的独占而不饿肚子。</p>
+</div>
+
+<h3>② 针对网卡的优化</h3>
+<div class="card">
+  <ul>
+    <li><strong>关闭网卡节能</strong>：设备管理器 → 网络适配器 → 你的网卡 → 属性 → 电源管理 → 取消勾选"允许计算机关闭此设备以节约电源"。</li>
+    <li><strong>关闭中断节流 / 节能模式</strong>：网卡属性 → 高级 → 找到 <code>Interrupt Moderation</code>、<code>Energy Efficient Ethernet</code>、<code>Green Ethernet</code> 等，尝试禁用。</li>
+    <li><strong>更新网卡驱动</strong>到厂商官网最新版（不是 Windows Update 的通用版）。老的/通用网卡驱动 DPC 表现往往更差。</li>
+    <li><strong>Wi-Fi 改有线</strong>：Wi-Fi 驱动的 DPC 延迟普遍高于有线网卡，条件允许时用网线。</li>
+  </ul>
+</div>
+
+<h3>③ 系统级电源 / 调度优化</h3>
+<div class="card">
+  <ul>
+    <li><strong>电源计划设为"高性能"或"卓越性能"</strong>：控制面板 → 电源选项。节能计划会让 CPU 降频，加剧 DPC 延迟。</li>
+    <li><strong>关闭 CPU 核心 Parking / 动态降频</strong>（进阶，谨慎）。</li>
+    <li><strong>关闭不必要的后台程序</strong>：尤其是会大量联网的（云盘同步、P2P 下载、游戏平台后台更新）。</li>
+  </ul>
+</div>
+
+<h3>④ 进阶：用 Windows Performance Analyzer 精确定位 <span class="tag">专业</span></h3>
+<div class="card">
+  <p>如果 LatencyMon 还不够，可以用微软官方的 <strong>Windows Performance Toolkit（WPT）</strong> 抓 DPC/ISR 的精确调用栈。</p>
+  <a class="btn sec" href="https://learn.microsoft.com/zh-cn/windows-hardware/test/wpt/">WPT 官方文档（含下载）</a>
+  <p class="dim">WPT 随 Windows ADK 一起分发。用 <code>xperf</code> / WPR 抓 trace，在 WPA 里看 "DPC/ISR Duration"。这是专业级工具，普通用户用 LatencyMon 已足够。</p>
+</div>
+
+<h2>四、判断"是不是 WDM2VST Ultra 的问题"</h2>
+<div class="card">
+  <p>做一个对照实验，区分"系统 DPC 问题"和"插件问题"：</p>
+  <ol>
+    <li>在 DAW 里挂一个<strong>普通的录音 / 监听通道</strong>（不经过 WDM2VST Ultra），用同样的网络 IO 复现。</li>
+    <li>如果普通通道也爆音/卡顿 → 是<strong>系统 DPC 延迟</strong>问题，按上面的方法优化系统。</li>
+    <li>如果只有 WDM2VST Ultra 通道变调、普通通道正常 → 把 LatencyMon 报告和你的 Latency 模式设置发给我们，我们继续跟进。</li>
+  </ol>
+</div>
+
+<div class="callout ok">
+  <div class="t">总结</div>
+  "CPU 低却变调"的本质是 <strong>DPC/ISR 延迟</strong>而非算力不足。先用 LatencyMon 找出延迟最高的驱动（网络 IO 场景多半是网卡），然后：<strong>提高 Latency 模式 + 优化网卡设置 + 高性能电源计划</strong>，绝大多数情况能解决。这部分和 Windows 的实时调度抢占机制有关，并非插件计算错误。
+</div>
+
+<footer>
+  WDM2VST Ultra · GeekAudio &nbsp;|&nbsp; 本文档中的第三方工具链接指向其官方来源，下载前请自行核实。
+</footer>
+
+</div>
+</body>
+</html>
