@@ -115,37 +115,65 @@ LUNA 内部对所有插件强制使用固定的 512 采样处理块，**不跟�
 
 ## 其他
 
+### 为什么 Windows「设置 → 系统 → 声音」里的 Ultra 端点顺序是乱的？
+
+打开 Windows 11 的「设置 → 声音」，把输入/输出设备列表展开，你可能看到 Ultra 端点的顺序是乱的（比如 27/28、29/30、15/16、31/32 混在一起），既不按通道号也不按名字。
+
+**这是 Windows 11 这个设置页的固有行为，不是驱动的问题。**
+
+**原因**：Windows 11「设置 → 声音」这个新版列表按系统内部的端点记录顺序（端点 GUID / 首次登记次序）显示，**不参考端点的友好名做排序**，应用层无法控制。微软官方答疑也确认：这个列表的顺序无法稳定指定，手动禁用 / 重新启用只能临时改变，重启后又会回到系统的内部顺序。
+
+参考（微软官方）：
+- [How to reorder audio output list in Windows 11 — Microsoft Q&A](https://learn.microsoft.com/en-us/answers/questions/4107308/how-to-reorder-audio-output-list-in-windows-11)
+- [IMMDeviceEnumerator::EnumAudioEndpoints — 枚举不保证顺序](https://learn.microsoft.com/en-us/windows/win32/api/mmdeviceapi/nf-mmdeviceapi-immdeviceenumerator-enumaudioendpoints)
+
+**实际不受影响的地方**：
+
+- **插件内的通道下拉框**：始终按通道号 01/02 → 31/32 升序排列，**永远是整齐的**。选通道请以插件内的列表为准。
+- **经典声音控制面板**（运行 `mmsys.cpl`）和**大多数 DAW 的设备下拉框**：按友好名排序，我们已把通道号做成两位零填充（`01/02` … `31/32`），所以这些地方也是整齐的。
+
+换句话说，只有 Windows 11 新版「设置 → 声音」那个展开列表会乱，而你平时真正用来选通道的插件下拉框和 DAW 设备列表都是有序的。
+
+---
+
+### 杀毒软件（ClamAV / ESET / Rising 等）报 `WDM2VSTUltra.sys` 有毒？
+
+少数 AV 引擎会把驱动文件标记为 `Revoked.CRT.HookSignTool` / `RiskWare.FakeCert` / `MalCert` 之类。**这是误报**。
+
+**为什么误报**：
+
+- 这些标签全部围绕"签名证书"，没有任何引擎说代码本身有恶意行为
+- 我们当前用的第三方代码签名证书在某些 AV 厂商的内部黑名单里
+- VirusTotal 上 45+ 家主流引擎（Microsoft Defender、卡巴斯基、Bitdefender、Avast、AVG、F-Secure、Sophos 等）**全部判定干净**
+- 你可以自行把 `WDM2VSTUltra.sys` 上传到 [VirusTotal](https://www.virustotal.com/) 或 [VirSCAN](https://www.virscan.org/) 复核，驱动没有任何后门、监控、远控行为
+
+**怎么处理**：
+
+- 如果你的 AV 没拦截：忽略即可，不影响功能
+- 如果你的 AV 拦截：把 `C:\Windows\System32\drivers\WDM2VSTUltra.sys` 加入信任白名单
+- 觉得不放心：等我们拿到 Microsoft attestation 签名后下个版本就不会再被任何 AV 标记
+
+**为什么我们不立刻换证书**：Microsoft Partner Center 驱动签名（attestation）需要正规 EV 代码签名证书（约 ¥2000-3000/年）。目前正在通过捐赠筹集这笔费用：https://www.geekaudio.cn/donate/
+
+---
+
 ### 玩游戏时反作弊提示要卸载本驱动怎么办？
 
 部分国内游戏的反作弊系统（如腾讯 ACE、网易易盾、米哈游 mhyprot 等）会扫描所有内核驱动，对**非 Microsoft 签名**的第三方驱动一律标记为"可疑"，无论驱动实际是否影响游戏。
 
 我们的驱动使用合法的第三方代码签名证书（用于 Windows 内核加载），但还没有获得 Microsoft 的二次签名（attestation），所以会被这类反作弊系统拦截。这跟驱动是否真的有作弊行为无关，纯粹看签名来源。
 
-**临时方案（推荐）**：玩游戏前停用本驱动，不需要卸载。
+**临时方案**：闲鱼等平台上有第三方"驱动隐藏"工具（原本面向规避反作弊驱动检测的场景），可以让反作弊系统不再提示卸载本驱动，从而正常进游戏。这类工具并非我们提供、也未经我们测试，可能存在兼容性或账号风险，是否使用请自行判断、自担风险。
 
-以管理员身份打开 CMD：
-
-```cmd
-:: 玩游戏前
-net stop WDM2VSTUltra
-
-:: 玩完游戏后
-net start WDM2VSTUltra
-```
-
-或者把上面两行分别保存为 `停止虚拟声卡.bat` 和 `启动虚拟声卡.bat`，右键以管理员身份运行。
-
-**长期方案**：如果你长期玩反作弊严格的游戏（《无畏契约》《永劫无间》《原神》等），建议从"添加或删除程序"完整卸载本软件，玩游戏期间不要安装。
-
-我们正在申请 Microsoft 签名认证，未来版本将不会再触发此类反作弊提示。
+**关于根治**：彻底解决要靠拿到 Microsoft 签名认证（attestation），需要正规 EV 代码签名证书（约 ¥2000-3000/年）。我们正在通过捐赠筹集这笔费用，认证落地后未来版本将不再触发此类反作弊提示：https://www.geekaudio.cn/donate/
 
 ---
 
 ### 驱动/插件版本号看起来不对？
 
-- **Windows 文件属性里的版本号**：1.0.2.0 ✓
-- **DAW 里显示的版本号**：1.0.2 ✓
-- **LUNA 显示的版本号**：1.0.2 ✓（老版本曾经显示 0.0.0，v1.0.2 起已修复）
+- **Windows 文件属性里的版本号**：1.0.9.0 ✓
+- **DAW 里显示的版本号**：1.0.9 ✓
+- **LUNA 显示的版本号**：1.0.9 ✓（老版本曾经显示 0.0.0，v1.0.2 起已修复）
 - **Windows 设备管理器里驱动属性**：显示当前安装的驱动版本
 
 如果发现版本号不一致，请：
