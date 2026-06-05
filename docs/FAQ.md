@@ -136,27 +136,6 @@ LUNA 内部对所有插件强制使用固定的 512 采样处理块，**不跟�
 
 ---
 
-### 杀毒软件（ClamAV / ESET / Rising 等）报 `WDM2VSTUltra.sys` 有毒？
-
-少数 AV 引擎会把驱动文件标记为 `Revoked.CRT.HookSignTool` / `RiskWare.FakeCert` / `MalCert` 之类。**这是误报**。
-
-**为什么误报**：
-
-- 这些标签全部围绕"签名证书"，没有任何引擎说代码本身有恶意行为
-- 我们当前用的第三方代码签名证书在某些 AV 厂商的内部黑名单里
-- VirusTotal 上 45+ 家主流引擎（Microsoft Defender、卡巴斯基、Bitdefender、Avast、AVG、F-Secure、Sophos 等）**全部判定干净**
-- 你可以自行把 `WDM2VSTUltra.sys` 上传到 [VirusTotal](https://www.virustotal.com/) 或 [VirSCAN](https://www.virscan.org/) 复核，驱动没有任何后门、监控、远控行为
-
-**怎么处理**：
-
-- 如果你的 AV 没拦截：忽略即可，不影响功能
-- 如果你的 AV 拦截：把 `C:\Windows\System32\drivers\WDM2VSTUltra.sys` 加入信任白名单
-- 觉得不放心：等我们拿到 Microsoft attestation 签名后下个版本就不会再被任何 AV 标记
-
-**为什么我们不立刻换证书**：Microsoft Partner Center 驱动签名（attestation）需要正规 EV 代码签名证书（约 ¥2000-3000/年）。目前正在通过捐赠筹集这笔费用：https://www.geekaudio.cn/donate/
-
----
-
 ### 玩游戏时反作弊提示要卸载本驱动怎么办？
 
 部分国内游戏的反作弊系统（如腾讯 ACE、网易易盾、米哈游 mhyprot 等）会扫描所有内核驱动，对**非 Microsoft 签名**的第三方驱动一律标记为"可疑"，无论驱动实际是否影响游戏。
